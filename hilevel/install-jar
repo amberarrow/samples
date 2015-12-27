@@ -1,0 +1,7 @@
+mvn install:install-file \
+  -Dfile=/tmp/com.alexmerz.graphviz.jar \
+  -DgroupId=com.alexmerz.graphviz \
+  -DartifactId=jpgd \
+  -Dversion=0.8.6 \
+  -Dpackaging=jar \
+  -DgeneratePom=true

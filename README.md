@@ -1,2 +1,2 @@
-# samples
-various samples
+# Samples
+Various samples of maven projects, scripts, etc.
