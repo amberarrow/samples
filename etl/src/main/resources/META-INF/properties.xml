@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<configuration>
+
+  <property>
+   <name>dt.operator.*.attr.MEMORY_MB</name>
+   <value>200</value>
+  </property> 
+  <property>
+    <name>dt.operator.*.port.*.attr.BUFFER_MEMORY_MB</name>
+    <value>128</value>
+  </property>
+
+  <!-- Kafka Operator Properties -->
+  <property>
+    <name>dt.operator.KafkaInput.prop.topics</name>
+    <value>dataTopic</value>
+  </property>
+  <property>
+    <name>dt.operator.KafkaInput.prop.clusters</name>
+    <value>localhost:9092</value>  <!-- broker (NOT zookeeper) address -->
+  </property>
+
+  <!-- CSV Parser Properties -->
+  <property>
+    <name>dt.operator.CSVParser.prop.schema</name>
+    <value>{"separator":",","quoteChar":"\"","fields":[{"name":"RowTime","type":"Date","constraints":{"format":"dd/MM/yyyy hh:mm:ss Z"}},{"name":"id","type":"Integer"},{"name":"Product","type":"String"},{"name":"units","type":"Integer"}]}</value>
+  </property>
+
+  <!-- SQL Properties -->
+  <property>
+    <name>sqlSchemaInputName</name>
+    <value>FROMCSV</value>
+  </property>
+  <property>
+    <name>sqlSchemaOutputName</name>
+    <value>TOFILE</value>
+  </property>
+  <property>
+    <name>folderPath</name>
+    <value>/tmp/output</value>
+  </property>
+  <property>
+    <name>fileName</name>
+    <value>output.txt</value>
+  </property>
+  <property>
+    <name>sqlSchemaOutputDef</name>
+    <value>{"separator":",","quoteChar":"\"","fields":[{"name":"RowTime1","type":"Date","constraints":{"format":"dd/MM/yyyy hh:mm:ss Z"}},{"name":"RowTime2","type":"Date","constraints":{"format":"dd/MM/yyyy hh:mm:ss Z"}},{"name":"Product","type":"String"}]}</value>
+  </property>
+  <property>
+    <name>sql</name>
+    <value>INSERT INTO TOFILE SELECT STREAM ROWTIME, FLOOR(ROWTIME TO DAY), APEXCONCAT('OILPAINT', SUBSTRING(PRODUCT, 6, 7)) FROM FROMCSV WHERE ID > 3 AND PRODUCT LIKE 'paint%'</value>
+  </property>
+
+</configuration>
+
