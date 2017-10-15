@@ -19,6 +19,7 @@
 package org.example.etl;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.apex.malhar.kafka.KafkaSinglePortInputOperator;
@@ -27,8 +28,6 @@ import org.apache.apex.malhar.sql.table.CSVMessageFormat;
 import org.apache.apex.malhar.sql.table.FileEndpoint;
 import org.apache.apex.malhar.sql.table.StreamEndpoint;
 import org.apache.hadoop.conf.Configuration;
-
-import com.google.common.collect.ImmutableMap;
 
 import com.datatorrent.api.DAG;
 import com.datatorrent.api.StreamingApplication;
@@ -51,36 +50,48 @@ public class SampleApplication implements StreamingApplication
         throw new RuntimeException(e);
     }
 
+    // register custom user defined functions (UDFs)
     final SQLExecEnvironment env = SQLExecEnvironment.getEnvironment();
-    env.registerFunction("APEXCONCAT", this.getClass(), "apex_concat_str");
+    env.registerFunction("CALLTYPE", this.getClass(), "callType");
+    env.registerFunction("COST", this.getClass(), "cost");
 
-    Map<String, Class> fieldMapping = ImmutableMap.<String, Class>of(
-        "RowTime", Date.class,
-        "id", Integer.class,
-        "Product", String.class,
-        "units", Integer.class);
+    final Map<String, Class> fieldMap = new HashMap<String, Class>(6);
+    fieldMap.put("tstamp",      Date.class);
+    fieldMap.put("id",          Integer.class);
+    fieldMap.put("type",        String.class);
+    fieldMap.put("origin",      String.class);
+    fieldMap.put("destination", String.class);
+    fieldMap.put("duration",    Integer.class);
 
     // Add Kafka Input
-    KafkaSinglePortInputOperator kafkaInput = dag.addOperator("KafkaInput", KafkaSinglePortInputOperator.class);
-    kafkaInput.setInitialOffset("EARLIEST");
+    KafkaSinglePortInputOperator input = dag.addOperator("KafkaInput", KafkaSinglePortInputOperator.class);
+    input.setInitialOffset("EARLIEST");
 
     // Add CSVParser
-    CsvParser csvParser = dag.addOperator("CSVParser", CsvParser.class);
-    dag.addStream("KafkaToCSV", kafkaInput.outputPort, csvParser.in);
+    CsvParser parser = dag.addOperator("CSVParser", CsvParser.class);
+    dag.addStream("KafkaToParser", input.outputPort, parser.in);
 
-    // Register CSV Parser output as input table for first SQL
-    env.registerTable(conf.get("sqlSchemaInputName"), new StreamEndpoint(csvParser.out, fieldMapping));
+    // Register CSV Parser output as input table for SQL input endpoint
+    env.registerTable(conf.get("inSchemaName"), new StreamEndpoint(parser.out, fieldMap));
 
-    // Register FileEndpoint as output table for second SQL.
-    env.registerTable(conf.get("sqlSchemaOutputName"), new FileEndpoint(conf.get("folderPath"),
-        conf.get("fileName"), new CSVMessageFormat(conf.get("sqlSchemaOutputDef"))));
+    // Register FileEndpoint as output table for SQL output endpoint
+    env.registerTable(conf.get("outSchemaName"), new FileEndpoint(conf.get("outputDir"),
+        conf.get("fileName"), new CSVMessageFormat(conf.get("outputSchema"))));
 
-    // Add second SQL to DAG
-    env.executeSQL(dag, conf.get("sql"));
+    // Convert query to operators and streams and add to DAG
+    env.executeSQL(dag, conf.get("query"));
   }
 
-  public static String apex_concat_str(String s1, String s2) 
-  {
-    return s1 + s2; 
+  public static String callType(String s) {
+      if ("v".equals(s)) return "Voice";
+      if ("d".equals(s)) return "Data";
+      throw new RuntimeException(String.format("Error: Bad call type: %s", s));
+  }
+  public static String cost(String origin, String dest, int duration) {
+      // can make this calculation more elaborate by using different unit costs based on
+      // time of day, distance between origin and destination, etc.
+      //
+      final double centsPerSec = 0.2;
+      return String.format("$%.2f", duration * centsPerSec);
   }
 }
