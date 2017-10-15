@@ -37,14 +37,20 @@ import com.datatorrent.contrib.parser.CsvParser;
 
 
 @ApplicationAnnotation(name = "ETLExample")
-/**
- * @since 3.6.0
- */
 public class SampleApplication implements StreamingApplication
 {
   @Override
   public void populateDAG(DAG dag, Configuration conf)
   {
+    try {
+        // without this, the application fails at launch with this error:
+        //   java.sql.SQLException: No suitable driver found for jdbc:calcite
+        //
+        Class.forName("org.apache.calcite.jdbc.Driver");
+    } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
+    }
+
     final SQLExecEnvironment env = SQLExecEnvironment.getEnvironment();
     env.registerFunction("APEXCONCAT", this.getClass(), "apex_concat_str");
 
