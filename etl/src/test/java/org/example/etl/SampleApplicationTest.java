@@ -31,7 +31,6 @@ import static org.junit.Assert.assertNotNull;
 public class SampleApplicationTest
 {
   private final String testTopicData = "dataTopic";
-  private final String testTopicResult = "resultTopic";
 
   private TimeZone defaultTZ;
 
@@ -61,7 +60,6 @@ public class SampleApplicationTest
     KafkaUnit ku = kafkaUnitRule.getKafkaUnit();
     // topic creation is async and the producer may also auto-create it
     ku.createTopic(testTopicData, 1);
-    ku.createTopic(testTopicResult, 1);
 
     outputFolder += testName.getMethodName() + "/";
   }
@@ -81,7 +79,7 @@ public class SampleApplicationTest
     conf.set("apex.operator.KafkaInput.prop.topics", testTopicData);
     conf.set("apex.operator.KafkaInput.prop.clusters", "localhost:"+brokerPort);
     conf.set("apex.operator.KafkaInput.prop.initialOffset", "EARLIEST");
-    conf.set("folderPath", outputFolder);
+    conf.set("outputDir", outputFolder);
     conf.set("fileName", "out.tmp");
 
     SampleApplication app = new SampleApplication();
@@ -91,12 +89,12 @@ public class SampleApplicationTest
     launchAttributes.put(EmbeddedAppLauncher.RUN_ASYNC, true); // terminate after results are available
     AppHandle appHandle = launcher.launchApp(app, conf, launchAttributes);
 
-    String[] messages = {"15/02/2016 10:15:00 +0000,1,paint1,11",
-        "15/02/2016 10:16:00 +0000,2,paint2,12",
-        "15/02/2016 10:17:00 +0000,3,paint3,13",
-        "15/02/2016 10:18:00 +0000,4,paint4,14",
-        "15/02/2016 10:19:00 +0000,5,paint5,15",
-        "15/02/2016 10:10:00 +0000,6,abcde6,16"};
+    String[] messages = {
+        "13/10/2017 11:45:30 +0000,1,v,111-123-4567,222-987-6543,120",
+        "13/10/2017 12:25:30 +0000,2,v,111-123-4567,999-987-6543,600",
+        "14/10/2017  9:15:00 +0000,3,d,444-823-4864,555-381-7241,300",
+        "15/10/2017 10:15:00 +0000,4,d,111-222-3333,999-187-7654,1845"
+    };
     KafkaUnit ku = kafkaUnitRule.getKafkaUnit();
     for (String msg : messages) {
       ku.sendMessages(new KeyedMessage<String, String>(testTopicData, msg));
@@ -109,10 +107,12 @@ public class SampleApplicationTest
     // compare actual and expected output
     final String[] actualLines = FileUtils.readLines(output).toArray(new String[0]);
     final String[] expectedLines = new String[] {
-    "15/02/2016 10:18:00 +0000,15/02/2016 12:00:00 +0000,OILPAINT4",
-    "",
-    "15/02/2016 10:19:00 +0000,15/02/2016 12:00:00 +0000,OILPAINT5",
-    "" };
+        "13/10/2017 12:25:30 +0000,Voice,111-123-4567,999-987-6543,$120.00",
+        "",
+        "15/10/2017 10:15:00 +0000,Data,111-222-3333,999-187-7654,$369.00",
+        ""
+    };
+
     assertArrayEquals(expectedLines, actualLines);
 
   }  // test
