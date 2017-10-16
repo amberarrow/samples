@@ -2,26 +2,26 @@
 <configuration>
 
   <property>
-    <name>dt.operator.*.attr.MEMORY_MB</name>
+    <name>apex.operator.*.attr.MEMORY_MB</name>
     <value>200</value>
   </property> <property>
-    <name>dt.operator.*.port.*.attr.BUFFER_MEMORY_MB</name>
+    <name>apex.operator.*.port.*.attr.BUFFER_MEMORY_MB</name>
     <value>128</value>
   </property>
 
   <!-- Kafka Operator Properties -->
   <property>
-    <name>dt.operator.KafkaInput.prop.topics</name>
+    <name>apex.operator.KafkaInput.prop.topics</name>
     <value>ETLTopic</value>
   </property>
   <property>
-    <name>dt.operator.KafkaInput.prop.clusters</name>
+    <name>apex.operator.KafkaInput.prop.clusters</name>
     <value>localhost:9092</value>  <!-- broker (NOT zookeeper) address -->
   </property>
 
   <!-- CSV Parser Properties -->
   <property>
-    <name>dt.operator.CSVParser.prop.schema</name>
+    <name>apex.operator.CSVParser.prop.schema</name>
     <value>{
     "separator":",",
     "quoteChar":"\"",
