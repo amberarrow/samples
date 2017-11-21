@@ -16,9 +16,16 @@ output records, and the directory and file name for the output. Make sure
 the Kafka broker and topic are correctly configured for your environment.
 
 ### Operation
-To build the application, simply run `mvn clean package -DskipTests`. To deploy it, use
-one of the methods documented at [Apex docs](http://apex.apache.org/docs.html). Populate
-the topic with the content of the file `etl-input.csv`. After the application fires up
+To build the application, simply run `mvn clean package -DskipTests`. To run the application
+locally as a JUnit test, run the `test()` functioon in the `SampleApplicationTest` class
+from your favorite IDE or run it from the commandline with:
+
+    mvn -Dtest=SampleApplicationTest#test test
+
+It takes about a minute to run to completion.
+
+To deploy it, use one of the methods documented at [Apex docs](http://apex.apache.org/docs.html).
+Populate the topic with the content of the file `etl-input.csv`. After the application fires up
 and processes the data from Kafka, you should see an output file in the HDFS directory
 `/tmp/ETLOutput` with content similar to this:
 ```
